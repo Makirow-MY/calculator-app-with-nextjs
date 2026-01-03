@@ -9,19 +9,43 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.12.2",
+    "@hookform/resolvers": "^3.3.4",
+    "@radix-ui/react-alert-dialog": "^1.0.5",
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-label": "^2.0.2",
+    "@radix-ui/react-select": "^2.0.0",
+    "@radix-ui/react-slot": "^1.0.2",
+    "@radix-ui/react-toast": "^1.1.5",
+    "@stripe/stripe-js": "^2.4.0",
+    "class-variance-authority": "^0.7.0",
+    "cloudinary": "^2.0.1",
+    "clsx": "^2.1.0",
+    "imaginify": "file:",
+    "lucide-react": "^0.544.0",
+    "mongodb": "^6.3.0",
+    "mongoose": "^8.1.1",
+    "next": "15.5.3",
+    "next-cloudinary": "^6.16.0",
+    "qs": "^6.11.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "next": "15.5.3"
+    "react-hook-form": "^7.50.1",
+    "stripe": "^14.16.0",
+    "svix": "^1.17.0",
+    "tailwind-merge": "^2.2.1",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
-    "@eslint/eslintrc": "^3"
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }
