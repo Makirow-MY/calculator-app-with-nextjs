@@ -1,0 +1,171 @@
+import { useState, useEffect } from "react";
+
+ const [display, setDisplay] = useState("0");
+  const [previousValue, setPreviousValue] = useState(null);
+  const [operation, setOperation] = useState(null);
+  const [isNewNumber, setIsNewNumber] = useState(true);
+
+  // Format display: use scientific notation for very large/small numbers
+  const formatDisplay = (value) => {
+    const num = parseFloat(value);
+
+    if (isNaN(num)) return "0";
+
+    // If number is too large/small or has too many digits → use scientific notation
+    if (Math.abs(num) >= 1e10 || (Math.abs(num) < 1e-5 && num !== 0)) {
+      return num.toExponential(8); // 8 digits precision
+    }
+
+    // Otherwise, format nicely without trailing zeros
+    return num.toLocaleString("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 10,
+    });
+  };
+
+  const handleNumberClick = (num) => {
+    if (isNewNumber) {
+      setDisplay(num);
+      setIsNewNumber(false);
+    } else {
+      setDisplay(display === "0" ? num : display + num);
+    }
+  };
+
+  const handleDecimalClick = () => {
+    if (isNewNumber) {
+      setDisplay("0.");
+      setIsNewNumber(false);
+    } else if (!display.includes(".")) {
+      setDisplay(display + ".");
+    }
+  };
+
+  const handleOperationClick = (op) => {
+    const currentValue = parseFloat(display);
+
+    if (previousValue === null) {
+      setPreviousValue(currentValue);
+    } else if (operation && !isNewNumber) {
+      const result = calculateResult(previousValue, currentValue, operation);
+      setDisplay(String(result));
+      setPreviousValue(result);
+    } else {
+      setPreviousValue(currentValue);
+    }
+
+    setOperation(op);
+    setIsNewNumber(true);
+  };
+
+  const calculateResult = (prev, current, op) => {
+    switch (op) {
+      case "+":
+        return prev + current;
+      case "-":
+        return prev - current;
+      case "×":
+        return prev * current;
+      case "÷":
+        return current !== 0 ? prev / current : 0;
+      default:
+        return current;
+    }
+  };
+
+  const handleEqualsClick = () => {
+    if (operation && previousValue !== null && !isNewNumber) {
+      const currentValue = parseFloat(display);
+      const result = calculateResult(previousValue, currentValue, operation);
+      setDisplay(String(result));
+      setPreviousValue(null);
+      setOperation(null);
+      setIsNewNumber(true);
+    }
+  };
+
+  const handleClear = () => {
+    setDisplay("0");
+    setPreviousValue(null);
+    setOperation(null);
+    setIsNewNumber(true);
+  };
+
+  const handleBackspace = () => {
+    if (isNewNumber || display === "0") return;
+
+    if (display.length === 1) {
+      setDisplay("0");
+      setIsNewNumber(true);
+    } else {
+      setDisplay(display.slice(0, -1));
+    }
+  };
+
+  const handlePercentage = () => {
+    const value = parseFloat(display);
+    setDisplay(String(value / 100));
+    setIsNewNumber(true);
+  };
+
+  const handleToggleSign = () => {
+    if (display !== "0") {
+      setDisplay(display.startsWith("-") ? display.slice(1) : "-" + display);
+    }
+  };
+
+  // Keyboard Support
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Prevent browser defaults for calculator keys
+      if (["+", "-", "*", "/", "Enter", " "].includes(e.key)) {
+        e.preventDefault();
+      }
+
+      if (e.key >= "0" && e.key <= "9") {
+        handleNumberClick(e.key);
+      } else if (e.key === ".") {
+        handleDecimalClick();
+      } else if (["+", "-", "*", "/"].includes(e.key)) {
+        const opMap = { "*": "×", "/": "÷" };
+        const op = opMap[e.key] || e.key;
+        handleOperationClick(op);
+      } else if (e.key === "Enter" || e.key === "=") {
+        handleEqualsClick();
+      } else if (e.key === "Backspace") {
+        handleBackspace(); // ← Erase last digit
+      } else if (e.key === "Delete") {
+        handleBackspace();
+      } else if (e.key.toLowerCase() === "c") {
+        handleClear(); // C = Clear All
+      } else if (e.key === "%") {
+        handlePercentage();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [display, previousValue, operation, isNewNumber]);
+
+  const buttons = [
+    { label: "C", action: handleClear, className: "bg-red-500 hover:bg-red-600 text-white" },
+    { label: "±", action: handleToggleSign, className: "bg-slate-300 hover:bg-slate-400" },
+    { label: "%", action: handlePercentage, className: "bg-slate-300 hover:bg-slate-400" },
+    { label: "÷", action: () => handleOperationClick("÷"), className: "bg-[#fcae42] hover:bg-orange-400 text-white" },
+    { label: "7", action: () => handleNumberClick("7"), className: "bg-white hover:bg-slate-50" },
+    { label: "8", action: () => handleNumberClick("8"), className: "bg-white hover:bg-slate-50" },
+    { label: "9", action: () => handleNumberClick("9"), className: "bg-white hover:bg-slate-50" },
+    { label: "×", action: () => handleOperationClick("×"), className: "bg-[#fcae42] hover:bg-orange-400 text-white" },
+    { label: "4", action: () => handleNumberClick("4"), className: "bg-white hover:bg-slate-50" },
+    { label: "5", action: () => handleNumberClick("5"), className: "bg-white hover:bg-slate-50" },
+    { label: "6", action: () => handleNumberClick("6"), className: "bg-white hover:bg-slate-50" },
+    { label: "-", action: () => handleOperationClick("-"), className: "bg-[#fcae42] hover:bg-orange-400 text-white" },
+    { label: "1", action: () => handleNumberClick("1"), className: "bg-white hover:bg-slate-50" },
+    { label: "2", action: () => handleNumberClick("2"), className: "bg-white hover:bg-slate-50" },
+    { label: "3", action: () => handleNumberClick("3"), className: "bg-white hover:bg-slate-50" },
+    { label: "+", action: () => handleOperationClick("+"), className: "bg-[#fcae42] hover:bg-orange-400 text-white" },
+    { label: "0", action: () => handleNumberClick("0"), className: "bg-white hover:bg-slate-50 col-span-2" },
+    { label: ".", action: handleDecimalClick, className: "bg-white hover:bg-slate-50" },
+    { label: "=", action: handleEqualsClick, className: "bg-blue-500 hover:bg-blue-600 text-white row-span-2 flex items-center justify-center" },
+  ];
+

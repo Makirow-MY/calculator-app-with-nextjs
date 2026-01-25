@@ -1,0 +1,562 @@
+import 'dart:math' as math;
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+void main() {
+  runApp(const CalculatorApp());
+}
+
+class CalculatorApp extends StatelessWidget {
+  const CalculatorApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: const CalculatorHome(),
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: const Color(0xFF171b27),
+      ),
+    );
+  }
+}
+
+class CalculatorHome extends StatelessWidget {
+  const CalculatorHome({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.of(context).size.width >= 768;
+
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Grid background
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withOpacity(0.03),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 1.0],
+                ),
+              ),
+              child: CustomPaint(painter: GridPainter()),
+            ),
+          ),
+          // Glow orbs
+          Positioned(
+            top: -100,
+            left: -100,
+            child: Container(
+              width: 400,
+              height: 400,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.pink.withOpacity(0.2),
+                blurRadius: 100,
+              ).copyWith(boxShadow: [
+                BoxShadow(
+                  color: Colors.pink.withOpacity(0.3),
+                  blurRadius: 100,
+                  spreadRadius: 50,
+                )
+              ]),
+            ),
+          ),
+          Positioned(
+            bottom: -100,
+            right: -100,
+            child: Container(
+              width: 400,
+              height: 400,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.cyan.withOpacity(0.2),
+              ).copyWith(boxShadow: [
+                BoxShadow(
+                  color: Colors.cyan.withOpacity(0.3),
+                  blurRadius: 100,
+                  spreadRadius: 50,
+                )
+              ]),
+            ),
+          ),
+          // Main content
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1024),
+                child: AnimatedGradientBorder(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.5),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Flex(
+                        direction: isDesktop ? Axis.horizontal : Axis.vertical,
+                        children: [
+                          // Left Banner (hidden on mobile)
+                          if (isDesktop)
+                            Expanded(
+                              flex: 1,
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topRight,
+                                    end: Alignment.bottomLeft,
+                                    colors: [
+                                      Color(0xFF1e293b),
+                                      Color(0xFF171b27),
+                                    ],
+                                  ),
+                                ),
+                                padding: const EdgeInsets.all(32),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Image.asset(
+                                      'assets/banner.png', // Place your image in assets/
+                                      fit: BoxFit.contain,
+                                    ),
+                                    const SizedBox(height: 24),
+                                    Text(
+                                      "Get Started Today",
+                                      style: TextStyle(
+                                        color: const Color(0xFF0891b2),
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      "Experience the power of our calculator app.\nFast, reliable, and easy to use!",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: const Color(0xFF94a3b8),
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          // Calculator
+                          const Expanded(
+                            flex: 1,
+                            child: CalculatorWidget(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Animated Gradient Border using CustomPainter
+class AnimatedGradientBorder extends StatefulWidget {
+  final Widget child;
+  const AnimatedGradientBorder({super.key, required this.child});
+
+  @override
+  State<AnimatedGradientBorder> createState() => _AnimatedGradientBorderState();
+}
+
+class _AnimatedGradientBorderState extends State<AnimatedGradientBorder>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 8),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return CustomPaint(
+          painter: GlowingConicBorderPainter(_controller.value),
+          child: widget.child,
+        );
+      },
+    );
+  }
+}
+
+class GlowingConicBorderPainter extends CustomPainter {
+  final double progress;
+  GlowingConicBorderPainter(this.progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final borderWidth = 4.0;
+    final glowIntensity = 42.0;
+
+    // Main conic gradient border
+    final borderPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = borderWidth
+      ..shader = SweepGradient(
+        startAngle: 0,
+        endAngle: 2 * math.pi,
+        transform: GradientRotation(progress * 2 * math.pi),
+        colors: const [
+          Color(0x80334155),
+          Color(0xFFfcae42),
+          Color(0xFF0891b2),
+          Color(0xFF0891b2),
+          Color(0x80334155),
+        ],
+        stops: const [0.80, 0.86, 0.90, 0.94, 1.0],
+      ).createShader(rect.deflate(borderWidth / 2));
+
+    // Glow
+    final glowPaint = Paint()
+      ..shader = SweepGradient(
+        startAngle: 0,
+        endAngle: 2 * math.pi,
+        transform: GradientRotation(progress * 2 * math.pi),
+        colors: [
+          Colors.transparent,
+          const Color(0xFFF40F35), // Bright red-pink glow as in your CSS
+          Colors.transparent,
+        ],
+      ).createShader(rect.deflate(-glowIntensity))
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 42)
+      ..blendMode = BlendMode.srcOver;
+
+    final path = Path()..addRRect(RRect.fromRectAndRadius(rect, const Radius.circular(24)));
+
+    // Draw glow first
+    canvas.drawPath(path, glowPaint);
+    // Then sharp border
+    canvas.drawPath(path, borderPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+// Grid background painter
+class GridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0x2e4f4f4f)
+      ..strokeWidth = 1;
+
+    const gridSize = 24.0;
+    const smallGrid = 14.0;
+
+    for (double x = 0; x < size.width; x += smallGrid) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (double y = 0; y < size.height; y += gridSize) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// Main Calculator Widget
+class CalculatorWidget extends StatefulWidget {
+  const CalculatorWidget({super.key});
+
+  @override
+  State<CalculatorWidget> createState() => _CalculatorWidgetState();
+}
+
+class _CalculatorWidgetState extends State<CalculatorWidget> {
+  String display = "0";
+  double? previousValue;
+  String? operation;
+  bool isNewNumber = true;
+
+  String formatDisplay(String value) {
+    final num = double.tryParse(value) ?? 0;
+    if (num.abs() >= 1e10 || (num.abs() < 1e-5 && num != 0)) {
+      return num.toStringAsExponential(8).replaceFirst('e+', 'e');
+    }
+    return num.toStringAsFixed(num.truncateToDouble() == num ? 0 : 10).replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
+  }
+
+  void handleNumber(String num) {
+    setState(() {
+      if (isNewNumber || display == "0") {
+        display = num;
+        isNewNumber = false;
+      } else {
+        display += num;
+      }
+    });
+  }
+
+  void handleDecimal() {
+    setState(() {
+      if (isNewNumber) {
+        display = "0.";
+        isNewNumber = false;
+      } else if (!display.contains(".")) {
+        display += ".";
+      }
+    });
+  }
+
+  void handleOperation(String op) {
+    setState(() {
+      final current = double.tryParse(display) ?? 0;
+      if (previousValue == null) {
+        previousValue = current;
+      } else if (!isNewNumber) {
+        previousValue = calculate(previousValue!, current, operation!);
+        display = previousValue.toString();
+      } else {
+        previousValue = current;
+      }
+      operation = op;
+      isNewNumber = true;
+    });
+  }
+
+  double calculate(double a, double b, String op) {
+    switch (op) {
+      case "+": return a + b;
+      case "-": return a - b;
+      case "×": return a * b;
+      case "÷": return b != 0 ? a / b : 0;
+      default: return b;
+    }
+  }
+
+  void handleEquals() {
+    if (operation != null && previousValue != null && !isNewNumber) {
+      setState(() {
+        final current = double.tryParse(display) ?? 0;
+        final result = calculate(previousValue!, current, operation!);
+        display = result.toString();
+        previousValue = null;
+        operation = null;
+        isNewNumber = true;
+      });
+    }
+  }
+
+  void handleClear() {
+    setState(() {
+      display = "0";
+      previousValue = null;
+      operation = null;
+      isNewNumber = true;
+    });
+  }
+
+  void handleBackspace() {
+    setState(() {
+      if (isNewNumber || display == "0") return;
+      if (display.length == 1) {
+        display = "0";
+        isNewNumber = true;
+      } else {
+        display = display.substring(0, display.length - 1);
+      }
+    });
+  }
+
+  void handlePercentage() {
+    setState(() {
+      final val = double.tryParse(display) ?? 0;
+      display = (val / 100).toString();
+      isNewNumber = true;
+    });
+  }
+
+  void handleToggleSign() {
+    setState(() {
+      if (display != "0") {
+        display = display.startsWith("-") ? display.substring(1) : "-$display";
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    HardwareKeyboard.instance.addHandler((event) {
+      if (event is KeyDownEvent) {
+        final key = event.logicalKey;
+        if (key == LogicalKeyboardKey.digit0 || key == LogicalKeyboardKey.numpad0) handleNumber("0");
+        else if (key == LogicalKeyboardKey.digit1 || key == LogicalKeyboardKey.numpad1) handleNumber("1");
+        else if (key == LogicalKeyboardKey.digit2 || key == LogicalKeyboardKey.numpad2) handleNumber("2");
+        else if (key == LogicalKeyboardKey.digit3 || key == LogicalKeyboardKey.numpad3) handleNumber("3");
+        else if (key == LogicalKeyboardKey.digit4 || key == LogicalKeyboardKey.numpad4) handleNumber("4");
+        else if (key == LogicalKeyboardKey.digit5 || key == LogicalKeyboardKey.numpad5) handleNumber("5");
+        else if (key == LogicalKeyboardKey.digit6 || key == LogicalKeyboardKey.numpad6) handleNumber("6");
+        else if (key == LogicalKeyboardKey.digit7 || key == LogicalKeyboardKey.numpad7) handleNumber("7");
+        else if (key == LogicalKeyboardKey.digit8 || key == LogicalKeyboardKey.numpad8) handleNumber("8");
+        else if (key == LogicalKeyboardKey.digit9 || key == LogicalKeyboardKey.numpad9) handleNumber("9");
+        else if (key == LogicalKeyboardKey.period || key == LogicalKeyboardKey.numpadDecimal) handleDecimal();
+        else if (key == LogicalKeyboardKey.add || key == LogicalKeyboardKey.numpadAdd) handleOperation("+");
+        else if (key == LogicalKeyboardKey.subtract || key == LogicalKeyboardKey.numpadSubtract) handleOperation("-");
+        else if (key == LogicalKeyboardKey.multiply || key == LogicalKeyboardKey.numpadMultiply) handleOperation("×");
+        else if (key == LogicalKeyboardKey.divide || key == LogicalKeyboardKey.numpadDivide) handleOperation("÷");
+        else if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.equal || key == LogicalKeyboardKey.numpadEnter) handleEquals();
+        else if (key == LogicalKeyboardKey.backspace) handleBackspace();
+        else if (key == LogicalKeyboardKey.delete) handleBackspace();
+        else if (key == LogicalKeyboardKey.keyC) handleClear();
+        else if (key == LogicalKeyboardKey.percent) handlePercentage();
+      }
+      return false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFF1e293b),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          // Display
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF171b27),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  operation != null && previousValue != null
+                      ? "${formatDisplay(previousValue.toString())} $operation"
+                      : "",
+                  style: const TextStyle(color: Colors.grey, fontSize: 18),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  formatDisplay(display),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 48,
+                    fontFamily: 'RobotoMono',
+                    fontWeight: FontWeight.w300,
+                  ),
+                  textAlign: TextAlign.end,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Buttons
+          Expanded(
+            child: GridView.count(
+              crossAxisCount: 4,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 1.1,
+              children: [
+                CalcButton("C", Colors.red, Colors.redAccent, handleClear),
+                CalcButton("±", Colors.grey.shade700, Colors.grey.shade600, handleToggleSign),
+                CalcButton("%", Colors.grey.shade700, Colors.grey.shade600, handlePercentage),
+                CalcButton("÷", const Color(0xFFfcae42), Colors.orange.shade600, () => handleOperation("÷")),
+                CalcButton("7", Colors.white, Colors.grey.shade200, () => handleNumber("7")),
+                CalcButton("8", Colors.white, Colors.grey.shade200, () => handleNumber("8")),
+                CalcButton("9", Colors.white, Colors.grey.shade200, () => handleNumber("9")),
+                CalcButton("×", const Color(0xFFfcae42), Colors.orange.shade600, () => handleOperation("×")),
+                CalcButton("4", Colors.white, Colors.grey.shade200, () => handleNumber("4")),
+                CalcButton("5", Colors.white, Colors.grey.shade200, () => handleNumber("5")),
+                CalcButton("6", Colors.white, Colors.grey.shade200, () => handleNumber("6")),
+                CalcButton("-", const Color(0xFFfcae42), Colors.orange.shade600, () => handleOperation("-")),
+                CalcButton("1", Colors.white, Colors.grey.shade200, () => handleNumber("1")),
+                CalcButton("2", Colors.white, Colors.grey.shade200, () => handleNumber("2")),
+                CalcButton("3", Colors.white, Colors.grey.shade200, () => handleNumber("3")),
+                CalcButton("+", const Color(0xFFfcae42), Colors.orange.shade600, () => handleOperation("+")),
+                CalcButton("0", Colors.white, Colors.grey.shade200, () => handleNumber("0"), colSpan: 2),
+                CalcButton(".", Colors.white, Colors.grey.shade200, handleDecimal),
+                CalcButton("=", Colors.blue, Colors.blueAccent, handleEquals, rowSpan: 2),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class CalcButton extends StatelessWidget {
+  final String label;
+  final Color color;
+  final Color hoverColor;
+  final VoidCallback onPressed;
+  final int colSpan;
+  final int rowSpan;
+
+  const CalcButton(
+    this.label,
+    this.color,
+    this.hoverColor,
+    this.onPressed, {
+    super.key,
+    this.colSpan = 1,
+    this.rowSpan = 1,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GridTile(
+      child: Material(
+        color: color,
+        borderRadius: BorderRadius.circular(16),
+        elevation: 8,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onPressed,
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: label == "=" ? 36 : 28,
+                fontWeight: FontWeight.w500,
+                color: color == Colors.white ? Colors.black87 : Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

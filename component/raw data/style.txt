@@ -1,0 +1,36 @@
+//MAIN PAGE STYLING
+className="min-h-screen bg-[var(--bg-main)] relative flex items-center justify-center  w-full overflow-hidden "
+className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px]"
+className="absolute top-0 -left-4 size-96 bg-pink-500 opacity-20 blur-[100px]"
+className="absolute bottom-0 -right-4 size-96 bg-cyan-500 opacity-20 blur-[100px]"
+
+className={`w-full min-h-screen flex items-center justify-center overflow-hidden p-4  bg-[var(--bg-main)] `}
+className="relative w-full  max-w-4xl md:h-[600px] "
+className={`animated-gradient-border  w-full h-full`}
+className="w-full h-full flex flex-col rounded-3xl shadow-2xl md:flex-row"
+className="hidden md:w-1/2 md:flex flex-col items-center justify-center p-6 bg-gradient-to-bl from-[var(--bg-secondary)] to-[var(--bg-main)]"
+  
+className="w-full h-auto object-contain"
+className="mb-3 text-center"
+className="text-xl font-medium text-[var(--color-primary)]"
+className="text-sm text-[var(--text-secondary)]"
+   
+
+
+//CALCULATOR STYLING
+
+className="bg-[var(--bg-secondary)] p-6 md:w-1/2"
+className="bg-[var(--bg-main)] rounded-2xl p-6 mb-4 flex flex-col justify-end items-end"
+className="text-slate-400 text-md h-6 mb-2"
+className="text-white text-5xl break-all text-right leading-tight font-mono"
+className="grid grid-cols-4 gap-3"
+className={` ${button.className}
+              rounded-xl h-16 shadow-lg
+              transition-all duration-150
+              cursor-pointer text-xl font-medium
+              hover:scale-105 active:scale-95
+              flex items-center justify-center
+              ${button.label === "0" ? "col-span-2" : ""}
+              ${button.label === "=" ? "row-span-2" : ""}
+            `}
+   

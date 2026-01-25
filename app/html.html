@@ -1,0 +1,211 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+:root {
+  --color-primary-hover: #0891b2;
+  --color-primary: #fcae42;
+  --color-primary-light: #0891b2;
+
+  --bg-main: #171b27;      /* slate-900 */
+  --bg-secondary: #1e293b; /* slate-800 */
+  --bg-card: #1e293b;
+  --text-primary: #f1f5f9;  /* slate-100 */
+  --text-secondary: #94a3b8;/* slate-400 */
+  --text-muted: #64748b;   /* slate-500 */
+  --border: #334155;       /* slate-700 */
+}
+
+/* ---------- LIGHT MODE ---------- */
+.light {
+ 
+
+  --bg-main: #f1f5f9;      /* slate-100 */
+  --bg-secondary: #e2e8f0; /* slate-200 */
+  --bg-card: #ffffff;
+  --text-primary: #1e293b; /* slate-800 */
+  --text-secondary: #475569;/* slate-600 */
+  --text-muted: #64748b;   /* slate-500 */
+  --border: #cbd5e1;       /* slate-300 */
+}
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes border {
+  to {
+    --border-angle: 360deg;
+  }
+}
+/* 1. Register the custom property so it can be animated as an angle */
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes spin-border {
+  to {
+    --border-angle: 360deg;
+  }
+}
+
+/* Main animated glowing border class */
+.animated-gradient-border {
+  /* Initial angle */
+  --border-angle: 0deg;
+
+  /* Border thickness */
+  --border-width: 4px;
+
+  /* Glow intensity (adjust as needed) */
+  --glow-intensity: 42px;    /* size of the glow */
+  --glow-color: rgb(244, 15, 53);  /* uses your cyan light color */
+
+  position: relative;
+  isolation: isolate; /* helps with layering */
+
+  /* Inner background (content area) */
+  background:
+    linear-gradient(
+      45deg,
+      var(--bg-main),
+      color-mix(in srgb, var(--bg-secondary) 50%, var(--bg-main)),
+      var(--bg-main)
+    )
+    padding-box,
+
+    /* Animated conic gradient acting as the border */
+    conic-gradient(
+      from var(--border-angle),
+      color-mix(in srgb, var(--border) 80%, transparent),
+      var(--color-primary) 86%,
+      var(--color-primary-light) 90%,
+      #0891b2 94%,
+      color-mix(in srgb, var(--border) 100%, transparent)
+    )
+    border-box;
+
+  border: var(--border-width) solid transparent;
+  border-radius: 1.5rem; /* rounded-3xl */
+  animation: spin-border 8s linear infinite;
+
+  overflow: hidden;
+}
+
+/* Add glowing effect using pseudo-element */
+.animated-gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: calc(var(--border-width) * -1); /* extend outside */
+  border-radius: inherit;
+  padding: var(--border-width); /* creates space for the glow */
+
+  background: conic-gradient(
+    from var(--border-angle),
+    transparent,
+    var(--glow-color),
+    transparent
+  );
+
+  mask: 
+    linear-gradient(#fff 0 0) padding-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+
+  opacity: 0.7;
+  filter: blur(var(--glow-intensity));
+  animation: spin-border 8s linear infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+
+*,
+*::before,
+*::after {
+  transition: 
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease,
+    --color-primary 0.3s ease,
+    --color-primary-light 0.3s ease ,
+    --color-primary-hover 0.3s ease;
+}
+
+/* OPTIONAL: Add a subtle glow pulse on active elements */
+.hover-glow:hover {
+  filter: drop-shadow(0 0 8px var(--color-primary));
+  transition: filter 0.3s ease;
+}
+
+
+
+
+"use client";
+import Image from "next/image";
+
+import Calculator from '@/component/Calculator'
+import BorderAnimatedContainer from '@/component/BorderAnimatedContainer'
+export default function Home() {
+  return (
+        <div className="min-h-screen bg-[var(--bg-main)] relative flex items-center justify-center  w-full overflow-hidden ">
+      {/* DECORATORS - GRID BG & GLOW SHAPES */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px]" />
+      <div className="absolute top-0 -left-4 size-96 bg-pink-500 opacity-20 blur-[100px]" />
+      <div className="absolute bottom-0 -right-4 size-96 bg-cyan-500 opacity-20 blur-[100px]" />
+
+     <div className={`w-full min-h-screen flex items-center justify-center overflow-hidden p-4  bg-[var(--bg-main)] `}>
+      <div className="relative w-full  max-w-4xl md:h-[600px] ">
+         <BorderAnimatedContainer>
+          <div className="w-full h-full flex flex-col rounded-3xl shadow-2xl md:flex-row">
+            <div className="hidden md:w-1/2 md:flex flex-col items-center justify-center p-6 bg-gradient-to-bl from-[var(--bg-secondary)] to-[var(--bg-main)]">
+                              
+              <div>
+                <img
+                  src="/banner.png"
+                  alt="People using mobile devices"
+                  className="w-full h-auto object-contain"
+                />
+                <div className="mb-3 text-center">
+                  <h3 className="text-xl font-medium text-[var(--color-primary)]">Get Started Today</h3>
+                  <p className="text-sm text-[var(--text-secondary)]">Experience the power of our calculator app. Fast, reliable, and easy to use!</p>
+                </div>
+              </div>
+
+            </div>
+            <Calculator />
+          </div>          
+          </BorderAnimatedContainer>
+        
+       
+      </div>
+   
+    </div>
+
+    </div>
+  );
+}
